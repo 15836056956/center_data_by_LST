@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>下咽癌患者检验指标数据库管理</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>下咽癌患者检验指标数据库管理应用</h1>
+      <p>面向肿瘤科临床场景的检验指标采集、更新与管理</p>
+    </div>
+    <div class="stats" id="statsOverview">
+      <div>
+        <span class="stats-label">患者总数</span>
+        <strong id="statPatients">0</strong>
+      </div>
+      <div>
+        <span class="stats-label">记录时间点</span>
+        <strong id="statRecords">0</strong>
+      </div>
+      <div>
+        <span class="stats-label">筛选结果</span>
+        <strong id="statFiltered">0</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card" id="infoSection">
+      <h2>患者基本信息录入</h2>
+      <form id="patientForm">
+        <div class="form-grid">
+          <label>
+            患者ID<span class="required">*</span>
+            <input type="text" name="patientId" required />
+          </label>
+          <label>
+            姓名<span class="required">*</span>
+            <input type="text" name="patientName" required />
+          </label>
+          <label>
+            性别<span class="required">*</span>
+            <select name="gender" required>
+              <option value="">请选择</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
+              <option value="其他">其他</option>
+            </select>
+          </label>
+          <label>
+            年龄<span class="required">*</span>
+            <input type="number" name="age" min="0" max="120" required />
+          </label>
+          <label>
+            住院号<span class="required">*</span>
+            <input type="text" name="admissionNo" required />
+          </label>
+          <label>
+            联系方式
+            <input type="tel" name="contact" />
+          </label>
+          <label>
+            住院时间点<span class="required">*</span>
+            <input type="date" name="admissionDate" required />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary">保存/新增患者</button>
+          <button type="button" id="resetForm">清空表单</button>
+        </div>
+        <p class="hint" id="formHint"></p>
+      </form>
+    </section>
+
+    <section class="card" id="uploadSection">
+      <h2>图片上传识别</h2>
+      <div class="upload-box">
+        <input type="file" id="imageInput" accept="image/png, image/jpeg" />
+        <div class="preview" id="imagePreview">暂无图片</div>
+        <div class="progress">
+          <div class="progress-bar" id="uploadProgress"></div>
+        </div>
+        <button class="primary" id="startRecognition">开始识别</button>
+        <p class="hint" id="uploadHint">支持JPG/PNG格式，识别为本地模拟流程，可手动修正后保存。</p>
+      </div>
+    </section>
+
+    <section class="card" id="configSection">
+      <h2>表格配置区</h2>
+      <div class="config-actions">
+        <button class="primary" id="addIndicator">新增指标</button>
+        <button type="button" id="saveConfig">保存配置</button>
+      </div>
+      <div class="config-table" id="indicatorConfig"></div>
+      <p class="hint">拖拽指标顺序可调整表头展示；支持设置参考范围，用于异常提示。</p>
+    </section>
+
+    <section class="card" id="actionsSection">
+      <h2>数据操作区</h2>
+      <div class="action-buttons">
+        <button class="primary" id="addRecord">新增时间点</button>
+        <button id="editRecord">编辑选中数据</button>
+        <button class="danger" id="deleteRecord">删除选中数据</button>
+        <button id="clearStorage">清空本地数据</button>
+      </div>
+      <p class="hint" id="actionHint">双击表格单元格即可编辑指标数值。</p>
+      <div class="quickstart">
+        <h3>快速开始</h3>
+        <ol>
+          <li>填写患者基础信息与住院时间点，点击“保存/新增患者”。</li>
+          <li>上传检验结果图片并点击“开始识别”（可模拟自动填充）。</li>
+          <li>在表格中双击修正数据，支持筛选与导出。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="card" id="filterSection">
+      <h2>数据筛选与导出</h2>
+      <div class="form-grid">
+        <label>
+          按患者ID筛选
+          <input type="text" id="filterPatientId" placeholder="输入患者ID" />
+        </label>
+        <label>
+          住院日期范围-起
+          <input type="date" id="filterStart" />
+        </label>
+        <label>
+          住院日期范围-止
+          <input type="date" id="filterEnd" />
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="primary" id="applyFilter">应用筛选</button>
+        <button id="resetFilter">清空筛选</button>
+      </div>
+      <div class="export">
+        <button id="exportCsv">导出CSV</button>
+        <button id="exportExcel">导出Excel</button>
+      </div>
+      <p class="hint" id="filterHint"></p>
+    </section>
+
+    <section class="card full" id="tableSection">
+      <h2>患者检验指标数据表</h2>
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <section class="detail-panel" id="detailPanel">
+    <div class="detail-card">
+      <div class="detail-header">
+        <h2 id="detailTitle">患者详情</h2>
+        <div>
+          <button id="printDetail">打印详情</button>
+          <button class="primary" id="closeDetail">返回主页面</button>
+        </div>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
