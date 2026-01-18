@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>下咽癌患者检验指标数据库管理应用</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>下咽癌患者检验指标数据库管理应用</h1>
+      <p>肿瘤科临床专用 · 规范采集 · 动态更新 · 本地安全存储</p>
+    </div>
+    <div class="operator">
+      <label for="operatorName">操作人</label>
+      <input id="operatorName" type="text" placeholder="默认医护人员" aria-label="操作人姓名" />
+    </div>
+  </header>
+
+  <main class="app-layout">
+    <section class="panel" aria-labelledby="basicInfoTitle">
+      <div class="panel-title">
+        <h2 id="basicInfoTitle">患者基本信息录入</h2>
+        <span class="hint">必填字段将提示校验</span>
+      </div>
+      <form id="patientForm" class="form-grid">
+        <label>
+          患者ID*
+          <input name="patientId" required aria-required="true" placeholder="如 P0001" />
+        </label>
+        <label>
+          姓名*
+          <input name="name" required aria-required="true" placeholder="姓名" />
+        </label>
+        <label>
+          性别*
+          <select name="gender" required aria-required="true">
+            <option value="">请选择</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </label>
+        <label>
+          年龄*
+          <input name="age" type="number" min="0" required aria-required="true" placeholder="岁" />
+        </label>
+        <label>
+          住院号*
+          <input name="admissionNo" required aria-required="true" placeholder="住院号" />
+        </label>
+        <label>
+          联系方式
+          <input name="contact" placeholder="电话或其他" />
+        </label>
+        <label>
+          住院日期*
+          <input name="admissionDate" type="date" required aria-required="true" />
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary">保存/更新患者</button>
+          <button type="button" id="resetForm" class="ghost">清空</button>
+        </div>
+      </form>
+      <div class="panel-actions">
+        <button type="button" id="addTimepoint" class="secondary">添加住院时间点</button>
+        <button type="button" id="deleteSelected" class="danger">批量删除</button>
+      </div>
+      <div class="timepoint-manager" id="timepointManager" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="uploadTitle">
+      <div class="panel-title">
+        <h2 id="uploadTitle">数据文字上传识别</h2>
+        <span class="hint">支持CSV或纯文本粘贴</span>
+      </div>
+      <div class="upload-grid">
+        <div>
+          <label for="textUpload">检验结果文本</label>
+          <textarea id="textUpload" rows="8" placeholder="粘贴或输入检验结果文本"></textarea>
+          <div class="upload-controls">
+            <button type="button" id="simulateUpload" class="primary">开始识别</button>
+            <button type="button" id="applyParsed" class="secondary">应用到表格</button>
+          </div>
+          <div class="progress" aria-hidden="true">
+            <div class="progress-bar" id="uploadProgress"></div>
+          </div>
+          <p id="uploadStatus" class="status-text">等待上传</p>
+        </div>
+        <div>
+          <label for="parsedPreview">识别结果预览</label>
+          <textarea id="parsedPreview" rows="8" placeholder="识别结果将在此展示，可手动修正"></textarea>
+          <div class="inline-fields">
+            <label>
+              应用到患者
+              <select id="applyPatient"></select>
+            </label>
+            <label>
+              住院时间点
+              <select id="applyTimepoint"></select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="configTitle">
+      <div class="panel-title">
+        <h2 id="configTitle">表格配置区</h2>
+        <span class="hint">编辑检验指标、参考范围并保存配置</span>
+      </div>
+      <div class="config-actions">
+        <button type="button" id="addIndicator" class="secondary">新增指标</button>
+        <button type="button" id="saveConfig" class="primary">保存配置</button>
+      </div>
+      <div class="config-table" id="configTable" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="filterTitle">
+      <div class="panel-title">
+        <h2 id="filterTitle">辅助功能区</h2>
+        <span class="hint">筛选、导出、统计与操作日志</span>
+      </div>
+      <div class="assist-grid">
+        <div class="filter-box">
+          <h3>数据筛选</h3>
+          <label>
+            患者ID
+            <input id="filterPatientId" placeholder="输入患者ID" />
+          </label>
+          <label>
+            入院起始日期
+            <input id="filterStart" type="date" />
+          </label>
+          <label>
+            入院结束日期
+            <input id="filterEnd" type="date" />
+          </label>
+          <div class="filter-actions">
+            <button type="button" id="applyFilter" class="primary">应用筛选</button>
+            <button type="button" id="clearFilter" class="ghost">清空筛选</button>
+          </div>
+          <p id="filterStatus" class="status-text">当前显示全部数据</p>
+        </div>
+        <div class="export-box">
+          <h3>表格导出</h3>
+          <button type="button" id="exportCsv" class="secondary">导出CSV</button>
+          <button type="button" id="exportExcel" class="secondary">导出Excel</button>
+          <button type="button" id="clearStorage" class="danger">清空本地数据</button>
+        </div>
+        <div class="stats-box">
+          <h3>数据统计概览</h3>
+          <ul>
+            <li>患者总数：<span id="statPatients">0</span></li>
+            <li>时间点数量：<span id="statTimepoints">0</span></li>
+            <li>已录入指标数：<span id="statIndicators">0</span></li>
+          </ul>
+        </div>
+        <div class="log-box">
+          <h3>操作日志</h3>
+          <button type="button" id="viewLogs" class="ghost">查看日志</button>
+          <button type="button" id="exportLogs" class="secondary">导出日志</button>
+          <div id="logList" class="log-list" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel table-panel" aria-labelledby="tableTitle">
+      <div class="panel-title">
+        <h2 id="tableTitle">患者检验指标数据表格</h2>
+        <span class="hint">双击单元格可编辑，异常值自动标红</span>
+      </div>
+      <div class="table-toolbar">
+        <div class="pagination">
+          <label>
+            每页
+            <select id="pageSize">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <button type="button" id="prevPage" class="ghost">上一页</button>
+          <span id="pageInfo">1/1</span>
+          <button type="button" id="nextPage" class="ghost">下一页</button>
+        </div>
+        <div class="sort-status" id="sortStatus">未排序</div>
+      </div>
+      <div class="table-container" id="tableContainer"></div>
+    </section>
+  </main>
+
+  <section id="detailView" class="detail-view" hidden>
+    <div class="detail-content" role="dialog" aria-modal="true">
+      <header>
+        <h2 id="detailTitle">患者详情</h2>
+        <div>
+          <button type="button" id="printDetail" class="secondary">打印详情</button>
+          <button type="button" id="closeDetail" class="ghost">返回</button>
+        </div>
+      </header>
+      <div id="detailBody"></div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
